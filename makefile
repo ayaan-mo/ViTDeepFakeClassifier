@@ -3,7 +3,7 @@ PYTHON = $(VENV_NAME)/bin/python
 
 .PHONY: all setup install train infer clean
 
-all: setup install
+build: setup install
 
 setup:
 	python3 -m venv $(VENV_NAME)

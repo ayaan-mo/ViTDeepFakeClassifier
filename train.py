@@ -4,7 +4,8 @@ import random
 import torch
 import numpy as np
 import evaluate
-from datasets import Dataset
+import logging
+from datasets import Dataset, DatasetDict
 from transformers import (
     ViTImageProcessor,
     ViTForImageClassification,
@@ -12,20 +13,43 @@ from transformers import (
     Trainer
 )
 
-def load_images_from_folder(folder_path, label, max_images=200):
-    image_paths = list(Path(folder_path).glob("*"))
-    selected = random.sample(image_paths, min(len(image_paths), max_images))
-    return [{"image": Image.open(str(p)).convert("RGB"), "label": label} for p in selected]
+logging.basicConfig(
+    filename="training_log.txt",
+    filemode='w',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-real_images = load_images_from_folder("/Users/muhammadhamzasohail/Desktop/Test/Real", label=0)
-fake_images = load_images_from_folder("/Users/muhammadhamzasohail/Desktop/Test/Fake", label=1)
+def load_dataset_split(split_folder, max_per_class=200):
+    data = []
+    for label_name, label in [("Real", 0), ("Fake", 1)]:
+        folder_path = Path(split_folder) / label_name
+        image_paths = list(folder_path.rglob("*"))
+        image_paths = [p for p in image_paths if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp", ".webp"]]
+        selected_paths = random.sample(image_paths, min(max_per_class, len(image_paths)))
 
-data = real_images + fake_images
-random.shuffle(data)
+        for p in selected_paths:
+            try:
+                img = Image.open(p).convert("RGB")
+                data.append({"image": img, "label": label})
+            except Exception as e:
+                print(f"Could not load image {p}: {e}")
+    return data
 
-dataset = Dataset.from_list(data)
-dataset = dataset.train_test_split(test_size=0.2, seed=42)
-prepared_ds = {"train": dataset["train"], "validation": dataset["test"]}
+train_data = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Train", max_per_class=200)
+val_data   = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Validation", max_per_class=200)
+test_data  = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Test", max_per_class=200)
+
+dataset = DatasetDict({
+    "train": Dataset.from_list(train_data),
+    "validation": Dataset.from_list(val_data),
+    "test": Dataset.from_list(test_data),
+})
+
+logging.info("=== ViT Deepfake Training Started ===")
+logging.info(f"Training samples: {len(dataset['train'])}")
+logging.info(f"Validation samples: {len(dataset['validation'])}")
+logging.info(f"Test samples: {len(dataset['test'])}")
 
 image_processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
 
@@ -34,8 +58,8 @@ def transform(example_batch):
     inputs["labels"] = example_batch["label"]
     return inputs
 
-prepared_ds["train"] = prepared_ds["train"].with_transform(transform)
-prepared_ds["validation"] = prepared_ds["validation"].with_transform(transform)
+dataset["train"] = dataset["train"].with_transform(transform)
+dataset["validation"] = dataset["validation"].with_transform(transform)
 
 def collate_fn(batch):
     return {
@@ -72,8 +96,8 @@ def compute_metrics(p):
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=prepared_ds["train"],
-    eval_dataset=prepared_ds["validation"],
+    train_dataset=dataset["train"],
+    eval_dataset=dataset["validation"],
     tokenizer=image_processor,
     data_collator=collate_fn,
     compute_metrics=compute_metrics
@@ -84,12 +108,11 @@ trainer.train()
 model.save_pretrained("./vit-deepfake-finetune/best_model")
 image_processor.save_pretrained("./vit-deepfake-finetune/best_model")
 
-metrics = trainer.evaluate()
-print("Evaluation Accuracy:", metrics["eval_accuracy"])
+dataset["test"] = dataset["test"].with_transform(transform)
+metrics = trainer.evaluate(eval_dataset=dataset["test"])
 
-model = ViTForImageClassification.from_pretrained(
-    "./vit-deepfake-finetune/best_model",
-    id2label={"0": "real", "1": "fake"},
-    label2id={"real": 0, "fake": 1}
-)
-image_processor = ViTImageProcessor.from_pretrained("./vit-deepfake-finetune/best_model")
+test_acc = metrics["eval_accuracy"]
+logging.info(f"Test Set Accuracy: {test_acc:.4f}")
+logging.info("=== Training Complete ===")
+
+print("Test Set Accuracy:", test_acc)
