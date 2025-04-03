@@ -16,6 +16,7 @@ This project uses a fine-tuned Vision Transformer (ViT) model to detect deepfake
 ├── vit-deepfake-finetune/
 │   └── best_model/           # Fine-tuned model saved here
 ├── inference.py              # Script to train and test
+├── Makefile                  # Make commands for build, train, and infer
 ├── README.md                 # You're here
 ```
 
@@ -25,24 +26,33 @@ This project uses a fine-tuned Vision Transformer (ViT) model to detect deepfake
 pip install torch torchvision transformers datasets evaluate pillow
 ```
 
-## 🏋️‍♂️ Training the Model
+## 🏁 How to Run
 
-Just run the script:
+### 🔧 Setup (build environment)
 
 ```bash
-python inference.py
+make build
 ```
 
-What it does:
+### 🏋️‍♂️ Train the Model
+
+```bash
+make train
+```
+
+This command:
 - Loads images from your dataset
 - Trains a ViT model (3 epochs by default)
 - Saves the best model to `./vit-deepfake-finetune/best_model`
 - Evaluates model accuracy
-- Runs sample predictions
 
-## 🔍 Inference Example
+### 🔍 Run Inference
 
-At the end of the script, it loads 3 real and 3 fake test images and prints predictions:
+```bash
+make infer
+```
+
+At the end of inference, it loads 3 real and 3 fake test images and prints predictions like:
 
 ```
 image1.jpg: predicted = real, actual = real
@@ -80,7 +90,7 @@ Each folder should contain `.jpg` or `.png` images.
 After training, the script prints accuracy:
 
 ```
-Evaluation Accuracy: 0.92
+Evaluation Accuracy: 0.8875
 ```
 
 ## ⚙️ Customization
