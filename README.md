@@ -20,12 +20,6 @@ This project uses a fine-tuned Vision Transformer (ViT) model to detect deepfake
 ├── README.md                 # You're here
 ```
 
-## 📦 Installation
-
-```bash
-pip install torch torchvision transformers datasets evaluate pillow
-```
-
 ## 🏁 How to Run
 
 ### 🔧 Setup (build environment)
