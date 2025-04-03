@@ -18,6 +18,9 @@ train:
 infer:
 	$(PYTHON) inference.py
 
+test:
+	$(PYTHON) test.py
+
 clean:
 	rm -rf $(VENV_NAME)
 	rm -rf __pycache__

@@ -13,6 +13,7 @@ from transformers import (
     Trainer
 )
 
+# Setup logging
 logging.basicConfig(
     filename="training_log.txt",
     filemode='w',
@@ -20,10 +21,11 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def load_dataset_split(split_folder, max_per_class=200):
-    data = []
+def load_and_split_dataset(root_folder, max_per_class=600, val_ratio=0.2, test_ratio=0.1):
+    all_data = []
+
     for label_name, label in [("Real", 0), ("Fake", 1)]:
-        folder_path = Path(split_folder) / label_name
+        folder_path = Path(root_folder) / label_name
         image_paths = list(folder_path.rglob("*"))
         image_paths = [p for p in image_paths if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp", ".webp"]]
         selected_paths = random.sample(image_paths, min(max_per_class, len(image_paths)))
@@ -31,14 +33,27 @@ def load_dataset_split(split_folder, max_per_class=200):
         for p in selected_paths:
             try:
                 img = Image.open(p).convert("RGB")
-                data.append({"image": img, "label": label})
+                all_data.append({"image": img, "label": label})
             except Exception as e:
                 print(f"Could not load image {p}: {e}")
-    return data
 
-train_data = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Train", max_per_class=200)
-val_data   = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Validation", max_per_class=200)
-test_data  = load_dataset_split("/Users/muhammadhamzasohail/Desktop/dataset/Test", max_per_class=200)
+    # Shuffle and split
+    random.shuffle(all_data)
+    total = len(all_data)
+    test_size = int(test_ratio * total)
+    val_size = int(val_ratio * total)
+
+    test_data = all_data[:test_size]
+    val_data = all_data[test_size:test_size+val_size]
+    train_data = all_data[test_size+val_size:]
+
+    return train_data, val_data, test_data
+
+# Load and split the dataset
+train_data, val_data, test_data = load_and_split_dataset(
+    "/Users/muhammadhamzasohail/Desktop/GAN-Dataset", 
+    max_per_class=600
+)
 
 dataset = DatasetDict({
     "train": Dataset.from_list(train_data),
@@ -51,6 +66,7 @@ logging.info(f"Training samples: {len(dataset['train'])}")
 logging.info(f"Validation samples: {len(dataset['validation'])}")
 logging.info(f"Test samples: {len(dataset['test'])}")
 
+# Image Processor
 image_processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
 
 def transform(example_batch):
@@ -58,15 +74,18 @@ def transform(example_batch):
     inputs["labels"] = example_batch["label"]
     return inputs
 
+# Apply transform
 dataset["train"] = dataset["train"].with_transform(transform)
 dataset["validation"] = dataset["validation"].with_transform(transform)
 
+# Collate function
 def collate_fn(batch):
     return {
         "pixel_values": torch.stack([x["pixel_values"] for x in batch]),
         "labels": torch.tensor([x["labels"] for x in batch])
     }
 
+# Load model
 model = ViTForImageClassification.from_pretrained(
     "google/vit-base-patch16-224-in21k",
     num_labels=2,
@@ -74,6 +93,7 @@ model = ViTForImageClassification.from_pretrained(
     label2id={"real": 0, "fake": 1}
 )
 
+# Training arguments
 training_args = TrainingArguments(
     output_dir="./vit-deepfake-finetune",
     per_device_train_batch_size=2,
@@ -87,12 +107,14 @@ training_args = TrainingArguments(
     load_best_model_at_end=True
 )
 
+# Metrics
 metric = evaluate.load("accuracy")
 
 def compute_metrics(p):
     preds = np.argmax(p.predictions, axis=1)
     return metric.compute(predictions=preds, references=p.label_ids)
 
+# Trainer
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -103,11 +125,14 @@ trainer = Trainer(
     compute_metrics=compute_metrics
 )
 
+# Train model
 trainer.train()
 
+# Save model
 model.save_pretrained("./vit-deepfake-finetune/best_model")
 image_processor.save_pretrained("./vit-deepfake-finetune/best_model")
 
+# Evaluate on test set
 dataset["test"] = dataset["test"].with_transform(transform)
 metrics = trainer.evaluate(eval_dataset=dataset["test"])
 

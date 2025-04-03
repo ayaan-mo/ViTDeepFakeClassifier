@@ -25,8 +25,8 @@ def load_test_images(folder_path, max_images=3, label=None):
         test_images.append({"image": img, "path": str(p), "label": label})
     return test_images
 
-real_test_images = load_test_images("/Users/muhammadhamzasohail/Desktop/Dataset/Validation/Real", max_images=3, label=0)
-fake_test_images = load_test_images("/Users/muhammadhamzasohail/Desktop/Dataset/Validation/Fake", max_images=3, label=1)
+real_test_images = load_test_images("/Users/muhammadhamzasohail/Desktop/Dataset/Test/Real", max_images=50, label=0)
+fake_test_images = load_test_images("/Users/muhammadhamzasohail/Desktop/Dataset/Test/Fake", max_images=50, label=1)
 test_images = real_test_images + fake_test_images
 
 
@@ -40,7 +40,6 @@ for img_obj in test_images:
     with torch.no_grad():
         outputs = model(**inputs)
         pred_id = torch.argmax(outputs.logits, dim=1).item()
-        # Ensure the mapping key is a string
         pred_label = model.config.id2label[str(pred_id)]
     
     if pred_label == true_label:
