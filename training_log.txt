@@ -1,6 +1,0 @@
-2025-04-03 01:05:32,725 - INFO - === ViT Deepfake Training Started ===
-2025-04-03 01:05:32,725 - INFO - Training samples: 400
-2025-04-03 01:05:32,725 - INFO - Validation samples: 400
-2025-04-03 01:05:32,725 - INFO - Test samples: 400
-2025-04-03 01:10:55,805 - INFO - Test Set Accuracy: 0.8875
-2025-04-03 01:10:55,806 - INFO - === Training Complete ===
