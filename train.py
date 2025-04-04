@@ -6,6 +6,7 @@ import numpy as np
 import evaluate
 import logging
 from datasets import Dataset, DatasetDict
+import matplotlib.pyplot as plt
 from transformers import (
     ViTImageProcessor,
     ViTForImageClassification,
@@ -116,3 +117,19 @@ logging.info(f"Test Set Accuracy: {test_acc:.4f}")
 logging.info("=== Training Complete ===")
 
 print("Test Set Accuracy:", test_acc)
+
+train_loss = [log["loss"] for log in trainer.state.log_history if "loss" in log]
+eval_loss = [log["eval_loss"] for log in trainer.state.log_history if "eval_loss" in log]
+steps_train = [log["step"] for log in trainer.state.log_history if "loss" in log]
+steps_eval = [log["step"] for log in trainer.state.log_history if "eval_loss" in log]
+plt.figure(figsize=(10, 6))
+plt.plot(steps_train, train_loss, label="Training Loss")
+plt.plot(steps_eval, eval_loss, label="Validation Loss")
+plt.xlabel("Training Steps")
+plt.ylabel("Loss")
+plt.title("Training vs Validation Loss")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("loss_curve.png")
+plt.show()
