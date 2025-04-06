@@ -1,59 +1,74 @@
 import os
-import pandas as pd
+import random
 import shutil
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 
-# Configuration
-SOURCE_DIR = Path("140k")  # Update this path
-DEST_DIR = Path("gan_dataset")  # Update this path
-RANDOM_SEED = 42
+# Configuration - UPDATE THESE PATHS
+SOURCE_DIR = Path("140k/real_vs_fake/real_vs_fake")  
+DEST_DIR = Path("gan_dataset")  
 
-def collect_images():
-    pass
+def move_with_rename(src, dst_dir):
+    """Move file with automatic renaming if duplicate exists"""
+    filename = src.name
+    name, ext = os.path.splitext(filename)
+    counter = 1
+    dst_path = dst_dir / filename
+    while dst_path.exists():
+        dst_path = dst_dir / f"{name}_{counter}{ext}"
+        counter += 1
+    shutil.move(str(src), str(dst_path))
+    return dst_path
 
-def create_splits():
-    pass
+def collect_images(category):
+    """Collect all images of a category from nested folders"""
+    images = []
+    for split in ["train", "test", "valid"]:
+        split_dir = SOURCE_DIR / split / category
+        if split_dir.exists():
+            images.extend(split_dir.glob("*.[jpJP][pnPN]*[gG]"))  # Match jpg/jpeg/png
+    return list(set(images))  # Remove duplicates
 
-def move_images(images, split_name, category):
-    """Move images to destination directory"""
-    dest_dir = DEST_DIR / split_name / category
-    dest_dir.mkdir(parents=True, exist_ok=True)
+def create_gan_dataset():
+    # Collect all available images
+    all_real = collect_images("real")
+    all_fake = collect_images("fake")
     
-    for img in images:
-        try:
-            shutil.move(str(img), str(dest_dir / img.name))
-        except shutil.Error:
-            
-            base, ext = os.path.splitext(img.name)
-            counter = 1
-            new_name = f"{base}_{counter}{ext}"
-            while (dest_dir / new_name).exists():
-                counter += 1
-                new_name = f"{base}_{counter}{ext}"
-            shutil.move(str(img), str(dest_dir / new_name))
-
-def main():
-    for split in ['train', 'test', 'valid']:
-        for category in ['real', 'fake']:
-            (DEST_DIR / split / category).mkdir(parents=True, exist_ok=True)
+    # Validate sufficient images
+    if len(all_real) < 600:
+        raise ValueError(f"Not enough real images: found {len(all_real)}, need 600")
+    if len(all_fake) < 600:
+        raise ValueError(f"Not enough fake images: found {len(all_fake)}, need 600")
     
-    # Collect and split images
-    real_images, fake_images = collect_images()
+    # Random selection
+    random.seed(42)  # For reproducibility
+    selected_real = random.sample(all_real, 600)
+    selected_fake = random.sample(all_fake, 600)
     
-    real_images = real_images[:600]
-    fake_images = fake_images[:600]
+    # Split into 70-15-15
+    splits = {
+        "train": (0, 420),
+        "test": (420, 510),
+        "valid": (510, 600)
+    }
     
-    real_train, real_test, real_valid = create_splits(real_images)
-    fake_train, fake_test, fake_valid = create_splits(fake_images)
-    
-    move_images(real_train, 'train', 'real')
-    move_images(real_test, 'test', 'real')
-    move_images(real_valid, 'valid', 'real')
-    
-    move_images(fake_train, 'train', 'fake')
-    move_images(fake_test, 'test', 'fake')
-    move_images(fake_valid, 'valid', 'fake')
+    # Move images
+    for split_name, (start, end) in splits.items():
+        # Move real images
+        real_dest = DEST_DIR / split_name / "real"
+        for img in selected_real[start:end]:
+            move_with_rename(img, real_dest)
+        
+        # Move fake images
+        fake_dest = DEST_DIR / split_name / "fake"
+        for img in selected_fake[start:end]:
+            move_with_rename(img, fake_dest)
 
 if __name__ == "__main__":
-    main()
+    try:
+        create_gan_dataset()
+        print("✅ Successfully created dataset with:")
+        print(f"- 840 train images (420 real + 420 fake)")
+        print(f"- 180 test images (90 real + 90 fake)")
+        print(f"- 180 valid images (90 real + 90 fake)")
+    except Exception as e:
+        print(f"❌ Error: {e}")
