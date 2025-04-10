@@ -10,6 +10,8 @@ def move_with_rename(src, dst_dir):
 
     """Move file with automatic renaming if duplicate exists"""
 
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
     filename = src.name
     name, ext = os.path.splitext(filename)
     counter = 1
