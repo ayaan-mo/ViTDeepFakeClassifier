@@ -15,6 +15,9 @@ install:
 train:
 	$(PYTHON) train.py
 
+test:
+	$(PYTHON) test.py
+
 infer:
 	$(PYTHON) inference.py
 
