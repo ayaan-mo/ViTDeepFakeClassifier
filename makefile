@@ -10,7 +10,7 @@ setup:
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements1.txt
 
 train:
 	$(PYTHON) train.py
@@ -19,7 +19,8 @@ test:
 	$(PYTHON) test.py
 
 infer:
-	$(PYTHON) inference.py
+	uvicorn backend.main:app --reload
+
 
 clean:
 	rm -rf $(VENV_NAME)
