@@ -10,7 +10,7 @@ setup:
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r requirements1.txt
+	$(PYTHON) -m pip install -r config/requirements1.txt
 
 train:
 	$(PYTHON) train.py

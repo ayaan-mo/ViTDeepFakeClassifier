@@ -1,0 +1,7 @@
+Downlaod this and keep it in the /best_model folder and rename to model.safetensors
+The first one is sequential fine tune
+
+https://drive.google.com/file/d/1iymuVFLFTGkYc3qS5Z_hLmZ21RG2gO3n/view?usp=sharing
+
+the one at the bottom is the joint finetune:
+https://drive.google.com/file/d/1g84kQEUl3qGmzVS5E55pjl8mbNKcTcna/view?usp=sharing
