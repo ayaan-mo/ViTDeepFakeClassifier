@@ -6,9 +6,6 @@ from fastapi import FastAPI, File, UploadFile
 from io import BytesIO
 import shutil
 
-from fastapi.middleware.cors import CORSMiddleware
- 
-
 # Local model path
 model_path = "backend/vit-deepfake-finetune/best_model"
 
@@ -47,11 +44,3 @@ async def upload_file(file: UploadFile = File(...)):
     image = Image.open(BytesIO(image_data)).convert("RGB")
     prediction = predict_image(image)
     return {"filename": file.filename, "prediction": prediction}
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
