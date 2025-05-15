@@ -82,17 +82,24 @@ nav a:hover {
 }
 
 /* ======= Home Page ======= */
+.hero-white-bg {
+  background: white;
+  height: 100px;
+}
 .home-page {
   text-align: center;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 60px;
 }
 
 .hero-section {
-  flex-grow: 1;
-  padding: 4rem 2rem;
   background: linear-gradient(to right, #fff, #fce3ec);
+  text-align: center;
+  padding: 4rem 2rem;
+  border-top: 1px solid #ffd6e8;
+  border-bottom: 1px solid #ffd6e8;
 }
 
 .hero-title {
@@ -275,4 +282,95 @@ nav a:hover {
 }
 .side-nav a:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+.impact-section {
+  background: linear-gradient(90deg, #ffeaf4, #ffe1ec);
+  color: #333;
+  padding: 60px 20px;
+  text-align: center;
+  border-top: 1px solid #ffd6e8;
+  border-radius: 20px;
+  margin: 60px auto;
+  max-width: 1000px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.impact-section h2 {
+  font-size: 28px;
+  margin-bottom: 40px;
+  color: #222;
+}
+
+.impact-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.stat-card {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 12px;
+  min-width: 280px;
+  max-width: 320px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.03);
+}
+
+.stat-card h3 {
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: #d63384; /* your pink accent color */
+}
+
+.stat-card p {
+  font-style: italic;
+  font-size: 16px;
+  color: #666;
+}
+/* === Highlighted CTA Section === */
+.cta-highlight {
+  background: linear-gradient(90deg, #ffeaf4, #ffe1ec);
+  color: #333;
+  padding: 60px 20px;
+  text-align: center;
+  border-top: 1px solid #ffd6e8;
+  border-radius: 20px;
+  margin: 60px auto;
+  max-width: 1000px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.cta-text {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 30px;
+  line-height: 1.4;
+}
+
+.cta-text strong {
+  color: #d63384;
+  font-weight: 700;
+}
+
+.signup-button {
+  background-color: #d63384;
+  color: white;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+}
+
+.signup-button:hover {
+  background-color: #ffe0ee;
+  color: #b52c6f;
 }
